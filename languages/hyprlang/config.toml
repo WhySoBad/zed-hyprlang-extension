@@ -1,0 +1,4 @@
+name = "Hyprlang"
+grammar = "hyprlang"
+path_suffixes = ["hl", "conf"]
+line_comments = ["# "]
