@@ -1,6 +1,6 @@
-name = "Hyprlang"
+name = "Hyprland Config"
 grammar = "hyprlang"
-path_suffixes = ["hl", "conf"]
+path_suffixes = ["hyprland.hl", "hyprlandd.hl", "hyprland.conf", "hyprlandd.conf"]
 line_comments = ["# "]
 brackets = [
     { start = "(", end = ")", close = true, newline = true },

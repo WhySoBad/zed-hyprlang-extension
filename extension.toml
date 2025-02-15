@@ -4,12 +4,13 @@ version = "0.0.1"
 schema_version = 1
 authors = ["WhySoBad <49595640+WhySoBad@users.noreply.github.com>"]
 description = "Hyprlang language server and syntax highlighting"
-repository = "https://github.com/whysobad/zed-hyprlang-extension"
+repository = "https://github.com/WhySoBad/zed-hyprlang-extension"
 
-[language_servers.hyprlang]
+[language_servers.hyprland]
 name = "hyprls"
-language = "Hyprlang"
+language = "Hyprland Config"
 
 [grammars.hyprlang]
 repository = "https://github.com/tree-sitter-grammars/tree-sitter-hyprlang"
-commit = "6858695eba0e63b9e0fceef081d291eb352abce8"
+commit = "d719158abe537b1916daaea6fa03287089f0b601"
+
