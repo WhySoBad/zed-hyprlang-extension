@@ -43,7 +43,7 @@ fn main() {
     };
 
     if let Err(err) = checkout_hyprlang_grammar(
-        manifest_dir.join(out_dir).join("hyprlang"),
+        manifest_dir.join(&out_dir).join("hyprlang"),
         &hyprlang_grammar.repository,
         &hyprlang_grammar.commit,
     ) {
@@ -53,7 +53,7 @@ fn main() {
         )
     }
 
-    let queries = match read_dir(manifest_dir.join("grammars/hyprlang").join("queries/hyprlang")) {
+    let queries = match read_dir(manifest_dir.join(out_dir).join("hyprlang").join("queries/hyprlang")) {
         Ok(dir) => dir,
         Err(err) => return println!("cargo::error=unable to read hyprlang grammar dir: {err}"),
     };
