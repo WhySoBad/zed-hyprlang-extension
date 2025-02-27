@@ -2,7 +2,7 @@ id = "hyprlang"
 name = "Hyprlang"
 version = "0.0.1"
 schema_version = 1
-authors = ["WhySoBad <49595640+WhySoBad@users.noreply.github.com>"]
+authors = ["WhySoBad <git@wysbd.dev>"]
 description = "Hyprlang language server and syntax highlighting"
 repository = "https://github.com/WhySoBad/zed-hyprlang-extension"
 
