@@ -1,0 +1,8 @@
+diff --git a/queries/hyprlang/brackets.scm b/queries/hyprlang/brackets.scm
+new file mode 100644
+index 0000000..6f924c6
+--- /dev/null
++++ b/queries/hyprlang/brackets.scm
+@@ -0,0 +1,2 @@
++("{" @open "}" @close)
++("(" @open ")" @close)
