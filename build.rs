@@ -1,12 +1,16 @@
 use anyhow::{bail, Context, Result};
+use git::Git;
 use serde::Deserialize;
 use std::{
     collections::HashMap,
-    fs::{create_dir_all, read_dir, read_to_string},
+    fs::{create_dir_all, read_dir, read_to_string, remove_dir, remove_dir_all},
     path::{Path, PathBuf},
     process::Command,
 };
-use toml;
+
+mod git;
+
+const PATCH_BRANCH: &str = "zed-hyprlang-extension-patches";
 
 #[derive(Deserialize)]
 struct Extension {
@@ -28,6 +32,8 @@ fn main() {
     let manifest_env = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_default();
     let manifest_dir = Path::new(&manifest_env);
 
+    println!("cargo::warning=using manifest dir {}", manifest_dir.to_str().unwrap_or_default());
+    println!("cargo::warning=using output dir {out_dir}");
 
     let extension = match read_to_string(manifest_dir.join("extension.toml")) {
         Ok(extension_str) => match toml::from_str::<Extension>(&extension_str) {
@@ -42,43 +48,102 @@ fn main() {
         None => return println!("cargo::error=extension does not specify a hyprlang grammar"),
     };
 
-    if let Err(err) = checkout_hyprlang_grammar(
-        manifest_dir.join(&out_dir).join("hyprlang"),
+    if let Err(err) = checkout_new(
+        Path::new(&out_dir).join("hyprlang"),
         &hyprlang_grammar.repository,
         &hyprlang_grammar.commit,
     ) {
-        println!(
+        return println!(
             "cargo::error=unable to checkout hyprlang grammar {} [{}]: {err}",
             hyprlang_grammar.repository, hyprlang_grammar.commit
         )
     }
 
-    let queries = match read_dir(manifest_dir.join(out_dir).join("hyprlang").join("queries/hyprlang")) {
+    let queries = match read_dir(
+        Path::new(&out_dir)
+            .join("hyprlang")
+            .join("queries/hyprlang"),
+    ) {
         Ok(dir) => dir,
-        Err(err) => return println!("cargo::error=unable to read hyprlang grammar dir: {err}"),
+        Err(err) => {
+            println!("cargo::error=unable to read hyprlang grammar dir: {err}");
+            if Path::new(&out_dir).join("hyprlang").exists() {
+                if let Err(err) = remove_dir_all(Path::new(&out_dir).join("hyprlang")) {
+                    println!("cargo::error=unable to clean output directory up: {err}")
+                }
+            }
+            return;
+        },
     };
 
     let languages = match read_dir(manifest_dir.join("languages")) {
-        Ok(dir) => {
-            dir.into_iter().filter_map(|lang| lang.ok().map(|lang| lang.path())).collect::<Vec<_>>()
-        },
+        Ok(dir) => dir
+            .into_iter()
+            .filter_map(|lang| lang.ok().map(|lang| lang.path()))
+            .collect::<Vec<_>>(),
         Err(err) => return println!("cargo:error=unable to read languages dir: {err}"),
     };
 
     let shared_queries = match read_dir(manifest_dir.join("hyprlang")) {
         Ok(dir) => dir,
-        Err(err) => return println!("cargo::error=unable to read shared treesitter queries directory: {err}"),
+        Err(err) => {
+            return println!(
+                "cargo::error=unable to read shared treesitter queries directory: {err}"
+            )
+        }
     };
 
-    for query in queries.chain(shared_queries) {
-        if let Ok(query) = query {
-            for language in &languages {
-                if let Err(err) = std::fs::copy(query.path(), language.join(query.file_name())) {
-                    println!("cargo::warning=unable to copy {} to {}: {err}", query.path().to_string_lossy(), language.join(query.file_name()).to_string_lossy())
-                }
+    for query in queries.chain(shared_queries).flatten() {
+        for language in &languages {
+            if let Err(err) = std::fs::copy(query.path(), language.join(query.file_name())) {
+                println!(
+                    "cargo::warning=unable to copy {} to {}: {err}",
+                    query.path().to_string_lossy(),
+                    language.join(query.file_name()).to_string_lossy()
+                )
             }
         }
     }
+}
+
+fn checkout_new(directory: PathBuf, url: &str, rev: &str) -> Result<()> {
+    let repository = Git::new(directory.join(".git"));
+
+    if repository.directory().exists() {
+        let remotes = repository.remotes().context("failed to get git remotes")?;
+        if !remotes
+            .iter()
+            .any(|(name, remote_url)| name == "origin" && remote_url == url)
+        {
+            bail!(
+                "grammar directory '{}' already exists, but is not a git clone of '{}'",
+                directory.display(),
+                url
+            );
+        }
+
+        if repository.has_branch(PATCH_BRANCH) {
+            repository
+                .delete_branch(PATCH_BRANCH)
+                .context("unable to delete branch")?
+        }
+    } else {
+        repository
+            .init()
+            .context("unable to initialize new repository")?;
+        repository
+            .add_remote("origin", url)
+            .context("unable to add git remote")?;
+    }
+
+    repository
+        .fetch("origin", Some(rev))
+        .context("unable to fetch git revision")?;
+    repository
+        .checkout_branch(PATCH_BRANCH, Some(rev))
+        .context("unable to checkout git patch branch")?;
+
+    Ok(())
 }
 
 // see: https://github.com/zed-industries/zed/blob/56f13ddc50af5713e270027a9dd71dc7b00203c2/crates/extension/src/extension_builder.rs#L263
@@ -88,7 +153,7 @@ fn checkout_hyprlang_grammar(directory: PathBuf, url: &str, rev: &str) -> Result
     if directory.exists() {
         let remotes_output = Command::new("git")
             .arg("--git-dir")
-            .arg(&git_dir)
+            .arg(git_dir)
             .args(["remote", "-v"])
             .output()?;
         let has_remote = remotes_output.status.success()
@@ -104,6 +169,23 @@ fn checkout_hyprlang_grammar(directory: PathBuf, url: &str, rev: &str) -> Result
                 directory.display(),
                 url
             );
+        }
+
+        let branches_output = Command::new("git")
+            .arg("--git-dir")
+            .arg(git_dir)
+            .args(["branch", "--list"])
+            .output()?;
+        let has_branch = branches_output.status.success()
+            && String::from_utf8_lossy(&branches_output.stdout).contains(PATCH_BRANCH);
+        if has_branch {
+            let child = Command::new("git")
+                .arg("--git-dir")
+                .arg(git_dir)
+                .args(["branch", "-D", PATCH_BRANCH])
+                .spawn()?;
+        } else if !branches_output.status.success() {
+            bail!("unable to list branches of grammars git repository")
         }
     } else {
         create_dir_all(&directory).with_context(|| {
@@ -122,7 +204,7 @@ fn checkout_hyprlang_grammar(directory: PathBuf, url: &str, rev: &str) -> Result
 
         let remote_add_output = Command::new("git")
             .arg("--git-dir")
-            .arg(&git_dir)
+            .arg(git_dir)
             .args(["remote", "add", "origin", url])
             .output()
             .context("failed to execute `git remote add`")?;
@@ -136,15 +218,15 @@ fn checkout_hyprlang_grammar(directory: PathBuf, url: &str, rev: &str) -> Result
 
     let fetch_output = Command::new("git")
         .arg("--git-dir")
-        .arg(&git_dir)
+        .arg(git_dir)
         .args(["fetch", "--depth", "1", "origin", rev])
         .output()
         .context("failed to execute `git fetch`")?;
 
     let checkout_output = Command::new("git")
         .arg("--git-dir")
-        .arg(&git_dir)
-        .args(["checkout", rev])
+        .arg(git_dir)
+        .args(["checkout", "-b", PATCH_BRANCH, rev])
         .current_dir(&directory)
         .output()
         .context("failed to execute `git checkout`")?;
