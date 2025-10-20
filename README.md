@@ -10,7 +10,7 @@ The extension is added to the official zed extension catalog, simply search afte
 
 ### Language server
 
-To use the hyprls language server, you'll have to have the language server installed and available in `$PATH`. A detailed installation guide can be found in the [hyprls repository](https://github.com/hyprland-community/hyprls?tab=readme-ov-file#installation).
+If you install this extension on linux the [hyprls language server](https://github.com/hyprland-community/hyprls) will automatically be installed. The language server only works for files using the **Hyprland Config** language.
 
 ## Setup
 
@@ -27,5 +27,5 @@ By default every file ending in `.hl` or `.conf` will have hyprlang syntax highl
 
 ## Development
 
-To help developing this extension you need to install it as an dev extension. For this you'll have to have `cargo` installed and the `wasm32-wasip1` target ond the stable rust toolchain set up. Additionally, you'll need to clone this repository to some location from where you can install it as a dev extension.
+To help developing this extension you need to install it as an dev extension. For this you'll have to have `cargo` installed and the `wasm32-wasip2` target ond the stable rust toolchain set up. Additionally, you'll need to clone this repository to some location from where you can install it as a dev extension.
 A more detailed tutorial about this can be found in the [Zed docs](https://zed.dev/docs/extensions/developing-extensions#developing-an-extension-locally).

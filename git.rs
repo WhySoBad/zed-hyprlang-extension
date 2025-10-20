@@ -1,11 +1,15 @@
-use std::{fs::create_dir_all, path::{Path, PathBuf}, process::{Command, Output}};
+use std::{
+    fs::create_dir_all,
+    path::{Path, PathBuf},
+    process::{Command, Output},
+};
 
 use anyhow::bail;
 
 use crate::DEBUG;
 
 pub struct Git {
-    path: PathBuf
+    path: PathBuf,
 }
 
 impl Git {
@@ -15,19 +19,25 @@ impl Git {
 
     fn command(&self, command: &str, args: &[&str]) -> anyhow::Result<Output> {
         if DEBUG.is_some() {
-            println!("cargo::warning=running command: git {command} {}", args.join(" "));
+            println!(
+                "cargo::warning=running command: git {command} {}",
+                args.join(" ")
+            );
         }
 
         let output = Command::new("git")
-                .arg("--git-dir")
-                .arg(self.path.join(".git"))
-                .arg(command)
-                .args(args)
-                .current_dir(&self.path)
-                .output()?;
+            .arg("--git-dir")
+            .arg(self.path.join(".git"))
+            .arg(command)
+            .args(args)
+            .current_dir(&self.path)
+            .output()?;
 
         if DEBUG.is_some() {
-            println!("cargo::warning=got output: {}", String::from_utf8_lossy(&output.stdout));
+            println!(
+                "cargo::warning=got output: {}",
+                String::from_utf8_lossy(&output.stdout)
+            );
         }
 
         if output.status.success() {
@@ -46,12 +56,13 @@ impl Git {
         let output = self.command("remote", &["-v"])?;
 
         let stdout = String::from_utf8_lossy(&output.stdout);
-        Ok(
-            stdout.lines().filter_map(|line| {
+        Ok(stdout
+            .lines()
+            .filter_map(|line| {
                 let mut parts = line.split(|c: char| c.is_whitespace());
                 Some((parts.next()?.to_string(), parts.next()?.to_string()))
-            }).collect()
-        )
+            })
+            .collect())
     }
 
     /// Add a new remote to the repository
@@ -63,7 +74,10 @@ impl Git {
     /// Get all branches of the repository
     pub fn branches(&self) -> anyhow::Result<Vec<String>> {
         let output = self.command("branch", &["--format='%(refname:short)'"])?;
-        Ok(String::from_utf8_lossy(&output.stdout).lines().map(|str| str.to_string()).collect())
+        Ok(String::from_utf8_lossy(&output.stdout)
+            .lines()
+            .map(|str| str.to_string())
+            .collect())
     }
 
     /// Delete a specific branch from the repository
@@ -73,7 +87,12 @@ impl Git {
     }
 
     /// Checkout a (new) branch with a revision (optional)
-    pub fn checkout_branch(&self, branch: &str, new: bool, revision: Option<&str>) -> anyhow::Result<()> {
+    pub fn checkout_branch(
+        &self,
+        branch: &str,
+        new: bool,
+        revision: Option<&str>,
+    ) -> anyhow::Result<()> {
         let mut args = vec![];
         if new {
             args.push("-b");
@@ -88,7 +107,8 @@ impl Git {
 
     /// Check whether the repository has a branch which contains this name
     pub fn has_branch(&self, name: &str) -> bool {
-        self.branches().is_ok_and(|branches| branches.iter().any(|b| b.contains(name)))
+        self.branches()
+            .is_ok_and(|branches| branches.iter().any(|b| b.contains(name)))
     }
 
     /// Fetch a remote with an revision (optional)

@@ -143,7 +143,9 @@ fn checkout_repository(repository: &Git, url: &str, rev: &str) -> Result<()> {
         }
 
         if repository.has_branch(PATCH_BRANCH) {
-            repository.reset(true).context("unable to hard reset working tree")?;
+            repository
+                .reset(true)
+                .context("unable to hard reset working tree")?;
             repository.clean().context("unable to clean working tree")?;
             repository
                 .checkout_branch(TEMPORARY_BRANCH, false, None)
