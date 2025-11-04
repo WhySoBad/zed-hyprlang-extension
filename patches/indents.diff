@@ -1,0 +1,12 @@
+diff --git a/queries/hyprlang/indents.scm b/queries/hyprlang/indents.scm
+index 731ae9a..95ef340 100644
+--- a/queries/hyprlang/indents.scm
++++ b/queries/hyprlang/indents.scm
+@@ -1,6 +1 @@
+-(section) @indent.begin
+-
+-(section
+-  "}" @indent.end)
+-
+-"}" @indent.branch
++(section "}" @end) @indent
