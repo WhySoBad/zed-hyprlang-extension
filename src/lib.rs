@@ -2,10 +2,12 @@ use std::fs;
 
 use zed_extension_api::{self as zed, settings::LspSettings, LanguageServerId, Result};
 
-/// Name of the file containing the hyprls binary in a github release
-const HYPRLS_RELEASE_ASSET_NAME: &str = "hyprls.zip";
-/// Name of the hyprls binary in the unpacked release asset
-const HYPRLS_BINARY_NAME: &str = "hyprls";
+/// Name of the linux binary release asset
+const HYPRLS_LINUX_BINARY_NAME: &str = "hyprls";
+/// Name of the macos binary release asset
+const HYPRLS_MACOS_BINARY_NAME: &str = "hyprls";
+/// Name of the windows binary release asset
+const HYPRLS_WINDOWS_BINARY_NAME: &str = "hyprls";
 
 struct HyprlangExtension {
     cached_binary_path: Option<String>,
@@ -30,7 +32,7 @@ impl HyprlangExtension {
         let env = binary_settings
             .and_then(|binary_settings| binary_settings.env.as_ref())
             .map(|env| {
-                env.into_iter()
+                env.iter()
                     .map(|(k, v)| (k.to_string(), v.to_string()))
                     .collect()
             })
@@ -72,15 +74,20 @@ impl HyprlangExtension {
             .strip_prefix("v")
             .unwrap_or(&release.version);
         let version_dir = format!("hyprlang-{version}");
-        let binary_path = format!("{version_dir}/{HYPRLS_BINARY_NAME}");
+
+        let binary_asset_name = match zed::current_platform() {
+            (zed::Os::Linux, _) => HYPRLS_LINUX_BINARY_NAME,
+            (zed::Os::Mac, _) => HYPRLS_MACOS_BINARY_NAME,
+            (zed::Os::Windows, _) => HYPRLS_WINDOWS_BINARY_NAME,
+        };
+
+        let binary_path = format!("{version_dir}/{binary_asset_name}");
 
         let hyprls_asset = release
             .assets
             .iter()
-            .find(|asset| asset.name == HYPRLS_RELEASE_ASSET_NAME)
-            .ok_or_else(|| {
-                format!("asset not found in github release: {HYPRLS_RELEASE_ASSET_NAME}")
-            })?;
+            .find(|asset| asset.name == binary_asset_name)
+            .ok_or_else(|| format!("asset not found in github release: {binary_asset_name}"))?;
 
         fs::create_dir_all(&version_dir)
             .map_err(|err| format!("failed to create directory '{version_dir}': {err}"))?;
@@ -95,7 +102,7 @@ impl HyprlangExtension {
             zed::download_file(
                 &hyprls_asset.download_url,
                 &version_dir,
-                zed_extension_api::DownloadedFileType::Zip,
+                zed_extension_api::DownloadedFileType::Uncompressed,
             )
             .map_err(|err| format!("failed to download file: {err}"))?;
 
@@ -136,15 +143,6 @@ impl zed::Extension for HyprlangExtension {
         language_server_id: &zed::LanguageServerId,
         worktree: &zed::Worktree,
     ) -> zed::Result<zed::Command> {
-        match zed::current_platform() {
-            (zed::Os::Linux, _) => (),
-            _ => {
-                return zed::Result::Err(String::from(
-                    "hyprls language server is only available on linux",
-                ))
-            }
-        }
-
         self.make_language_server_command(language_server_id, worktree)
     }
 
