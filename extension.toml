@@ -1,6 +1,6 @@
 id = "hyprlang"
 name = "Hyprlang"
-version = "0.0.2"
+version = "0.0.3"
 schema_version = 1
 authors = ["WhySoBad <git@wysbd.dev>"]
 description = "Hyprlang language server and syntax highlighting"
@@ -12,6 +12,5 @@ language = "Hyprland Config"
 
 [grammars.hyprlang]
 repository = "https://github.com/tree-sitter-grammars/tree-sitter-hyprlang"
-# release v3.1.0
-commit = "d0441fd4b883ecc0e70140723a1cf5907992639a"
+commit = "22723f25f3faf329863d952c9601b492afd971c9"
 
