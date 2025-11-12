@@ -1,0 +1,34 @@
+diff --git a/queries/hyprlang/highlights.scm b/queries/hyprlang/highlights.scm
+index 974c5cf..190f5c5 100644
+--- a/queries/hyprlang/highlights.scm
++++ b/queries/hyprlang/highlights.scm
+@@ -1,4 +1,4 @@
+-(comment) @comment @spell
++(comment) @comment
+ 
+ [
+   "source"
+@@ -19,7 +19,7 @@
+   (name) @module)
+ 
+ (window_rule
+-  (name) @function.call)
++  (name) @function)
+ 
+ (section
+   device: (device_name) @type)
+@@ -35,7 +35,7 @@
+ [
+   "rgb"
+   "rgba"
+-] @function.builtin
++] @function
+ 
+ [
+   (number)
+@@ -67,3 +67,5 @@
+   "-"
+   "+"
+ ] @operator
++
++(string_literal) @string
