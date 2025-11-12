@@ -102,7 +102,7 @@ impl HyprlangExtension {
             zed::download_file(
                 &hyprls_asset.download_url,
                 &version_dir,
-                zed_extension_api::DownloadedFileType::Zip,
+                zed_extension_api::DownloadedFileType::Uncompressed,
             )
             .map_err(|err| format!("failed to download file: {err}"))?;
 
