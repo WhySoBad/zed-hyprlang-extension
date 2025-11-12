@@ -11,5 +11,6 @@ name = "hyprls"
 language = "Hyprland Config"
 
 [grammars.hyprlang]
-repository = "https://github.com/whysobad/tree-sitter-hyprlang"
-commit = "a12160b9fd074305c2a84296713816ae2932a99c"
+repository = "https://github.com/tree-sitter-grammars/tree-sitter-hyprlang"
+commit = "22723f25f3faf329863d952c9601b492afd971c9"
+
