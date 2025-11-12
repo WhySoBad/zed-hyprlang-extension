@@ -5,9 +5,9 @@ use zed_extension_api::{self as zed, settings::LspSettings, LanguageServerId, Re
 /// Name of the linux binary release asset
 const HYPRLS_LINUX_BINARY_NAME: &str = "hyprls";
 /// Name of the macos binary release asset
-const HYPRLS_MACOS_BINARY_NAME: &str = "hyprls";
+const HYPRLS_MACOS_BINARY_NAME: &str = "hyprls-macos";
 /// Name of the windows binary release asset
-const HYPRLS_WINDOWS_BINARY_NAME: &str = "hyprls";
+const HYPRLS_WINDOWS_BINARY_NAME: &str = "hyprls.exe";
 
 struct HyprlangExtension {
     cached_binary_path: Option<String>,
