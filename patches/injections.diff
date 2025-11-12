@@ -1,0 +1,28 @@
+diff --git a/queries/hyprlang/injections.scm b/queries/hyprlang/injections.scm
+index 9075a18..08a692f 100644
+--- a/queries/hyprlang/injections.scm
++++ b/queries/hyprlang/injections.scm
+@@ -1,5 +1,5 @@
+ (exec
+-  (string) @injection.content
++  (string) @content
+   (#set! injection.language "bash"))
+ 
+ (keyword
+@@ -7,8 +7,7 @@
+   (#any-of? @_name "windowrule" "windowrulev2")
+   (params
+     (string)
+-    (string) @injection.content
+-    (#set! injection.combined)
++    (string) @content
+     (#set! injection.language "regex")))
+ 
+ (keyword
+@@ -18,5 +17,5 @@
+     (_)+
+     (string) @_function
+     (#match? @_function ".*exec")
+-    (string) @injection.content
++    (string) @content
+     (#set! injection.language "bash")))
