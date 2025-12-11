@@ -101,7 +101,7 @@ impl HyprlangExtension {
 
             zed::download_file(
                 &hyprls_asset.download_url,
-                &version_dir,
+                &binary_path,
                 zed_extension_api::DownloadedFileType::Uncompressed,
             )
             .map_err(|err| format!("failed to download file: {err}"))?;
@@ -111,7 +111,7 @@ impl HyprlangExtension {
 
             for entry in entries {
                 let entry =
-                    entry.map_err(|err| format!("failed to workspace subdirectory: {err}"))?;
+                    entry.map_err(|err| format!("failed to read workspace subdirectory: {err}"))?;
                 if entry.file_name().to_str() != Some(&version_dir) {
                     fs::remove_dir_all(entry.path()).ok();
                 }
