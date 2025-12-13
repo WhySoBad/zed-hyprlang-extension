@@ -1,5 +1,5 @@
 diff --git a/queries/hyprlang/highlights.scm b/queries/hyprlang/highlights.scm
-index 974c5cf..190f5c5 100644
+index 974c5cf..b94c40d 100644
 --- a/queries/hyprlang/highlights.scm
 +++ b/queries/hyprlang/highlights.scm
 @@ -1,4 +1,4 @@
@@ -8,6 +8,19 @@ index 974c5cf..190f5c5 100644
  
  [
    "source"
+@@ -7,10 +7,10 @@
+   "exec"
+   "execr"
+   "exec-shutdown"
+-] @keyword
++] @property
+ 
+ (keyword
+-  (name) @keyword)
++  (name) @property)
+ 
+ (assignment
+   (name) @property)
 @@ -19,7 +19,7 @@
    (name) @module)
  

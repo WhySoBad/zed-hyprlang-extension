@@ -1,0 +1,8 @@
+diff --git a/queries/hyprlang/outline.scm b/queries/hyprlang/outline.scm
+new file mode 100644
+index 0000000..b0878ca
+--- /dev/null
++++ b/queries/hyprlang/outline.scm
+@@ -0,0 +1,2 @@
++(section
++    name: (name) @name) @item
