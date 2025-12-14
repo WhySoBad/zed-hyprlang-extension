@@ -1,6 +1,6 @@
 id = "hyprlang"
 name = "Hyprlang"
-version = "0.0.3"
+version = "0.0.4"
 schema_version = 1
 authors = ["WhySoBad <git@wysbd.dev>"]
 description = "Hyprlang language server and syntax highlighting"
