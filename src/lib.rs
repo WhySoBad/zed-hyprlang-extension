@@ -2,13 +2,6 @@ use std::fs;
 
 use zed_extension_api::{self as zed, settings::LspSettings, LanguageServerId, Result};
 
-/// Name of the linux binary release asset
-const HYPRLS_LINUX_BINARY_NAME: &str = "hyprls";
-/// Name of the macos binary release asset
-const HYPRLS_MACOS_BINARY_NAME: &str = "hyprls-macos";
-/// Name of the windows binary release asset
-const HYPRLS_WINDOWS_BINARY_NAME: &str = "hyprls.exe";
-
 struct HyprlangExtension {
     cached_binary_path: Option<String>,
 }
@@ -75,19 +68,30 @@ impl HyprlangExtension {
             .unwrap_or(&release.version);
         let version_dir = format!("hyprlang-{version}");
 
-        let binary_asset_name = match zed::current_platform() {
-            (zed::Os::Linux, _) => HYPRLS_LINUX_BINARY_NAME,
-            (zed::Os::Mac, _) => HYPRLS_MACOS_BINARY_NAME,
-            (zed::Os::Windows, _) => HYPRLS_WINDOWS_BINARY_NAME,
+        let (os, arch) = zed::current_platform();
+        let binary_os_str = match os {
+            zed::Os::Mac => "darwin",
+            zed::Os::Linux => "linux",
+            zed::Os::Windows => "windows",
+        };
+        let binary_arch_str = match arch {
+            zed::Architecture::Aarch64 => "aarch64",
+            zed::Architecture::X86 => "x86",
+            zed::Architecture::X8664 => "x86_64",
+        };
+        let binary_name = match os {
+            zed::Os::Mac | zed::Os::Linux => "hyprls",
+            zed::Os::Windows => "hyprls.exe",
         };
 
-        let binary_path = format!("{version_dir}/{binary_asset_name}");
+        let archive_asset_name = format!("hyprls-{binary_os_str}-{binary_arch_str}.tar.gz");
+        let binary_path = format!("{version_dir}/{binary_name}");
 
         let hyprls_asset = release
             .assets
             .iter()
-            .find(|asset| asset.name == binary_asset_name)
-            .ok_or_else(|| format!("asset not found in github release: {binary_asset_name}"))?;
+            .find(|asset| asset.name == archive_asset_name)
+            .ok_or_else(|| format!("asset not found in github release: {archive_asset_name}"))?;
 
         fs::create_dir_all(&version_dir)
             .map_err(|err| format!("failed to create directory '{version_dir}': {err}"))?;
@@ -99,10 +103,11 @@ impl HyprlangExtension {
                 &zed_extension_api::LanguageServerInstallationStatus::Downloading,
             );
 
+            // download and unpack archive into release version directory
             zed::download_file(
                 &hyprls_asset.download_url,
                 &version_dir,
-                zed_extension_api::DownloadedFileType::Uncompressed,
+                zed_extension_api::DownloadedFileType::GzipTar,
             )
             .map_err(|err| format!("failed to download file: {err}"))?;
 
@@ -111,7 +116,7 @@ impl HyprlangExtension {
 
             for entry in entries {
                 let entry =
-                    entry.map_err(|err| format!("failed to workspace subdirectory: {err}"))?;
+                    entry.map_err(|err| format!("failed to read workspace subdirectory: {err}"))?;
                 if entry.file_name().to_str() != Some(&version_dir) {
                     fs::remove_dir_all(entry.path()).ok();
                 }
